@@ -43,7 +43,7 @@ public class ExchangeTradeConsumer {
 	private NettyHandler nettyHandler;
 	@Value("${second.referrer.award}")
 	private boolean secondReferrerAward;
-	private ExecutorService executor = new ThreadPoolExecutor(30, 100, 0L, TimeUnit.MILLISECONDS,
+	private final ExecutorService executor = new ThreadPoolExecutor(30, 100, 0L, TimeUnit.MILLISECONDS,
 			new LinkedBlockingQueue<Runnable>(1024), new ThreadPoolExecutor.AbortPolicy());
 	@Autowired
 	private ExchangePushJob pushJob;
@@ -55,30 +55,28 @@ public class ExchangeTradeConsumer {
 	 */
 	@KafkaListener(topics = "exchange-trade", containerFactory = "kafkaListenerContainerFactory")
 	public void handleTrade(List<ConsumerRecord<String, String>> records) {
-		for (int i = 0; i < records.size(); i++) {
-			ConsumerRecord<String, String> record = records.get(i);
-			executor.submit(new HandleTradeThread(record));
-		}
+        for (ConsumerRecord<String, String> record : records) {
+            executor.submit(new HandleTradeThread(record));
+        }
 	}
 
 	@KafkaListener(topics = "exchange-order-completed", containerFactory = "kafkaListenerContainerFactory")
 	public void handleOrderCompleted(List<ConsumerRecord<String, String>> records) {
 		try {
-			for (int i = 0; i < records.size(); i++) {
-				ConsumerRecord<String, String> record = records.get(i);
-				//logger.info("订单交易处理完成消息topic={},value={}", record.topic(), record.value());
-				List<ExchangeOrder> orders = JSON.parseArray(record.value(), ExchangeOrder.class);
-				for (ExchangeOrder order : orders) {
-					String symbol = order.getSymbol();
-					// 委托成交完成处理
-					exchangeOrderService.tradeCompleted(order.getOrderId(), order.getTradedAmount(),
-							order.getTurnover());
-					// 推送订单成交
-					messagingTemplate.convertAndSend(
-							"/topic/market/order-completed/" + symbol + "/" + order.getMemberId(), order);
-					nettyHandler.handleOrder(NettyCommand.PUSH_EXCHANGE_ORDER_COMPLETED, order);
-				}
-			}
+            for (ConsumerRecord<String, String> record : records) {
+                //logger.info("订单交易处理完成消息topic={},value={}", record.topic(), record.value());
+                List<ExchangeOrder> orders = JSON.parseArray(record.value(), ExchangeOrder.class);
+                for (ExchangeOrder order : orders) {
+                    String symbol = order.getSymbol();
+                    // 委托成交完成处理
+                    exchangeOrderService.tradeCompleted(order.getOrderId(), order.getTradedAmount(),
+                            order.getTurnover());
+                    // 推送订单成交
+                    messagingTemplate.convertAndSend(
+                            "/topic/market/order-completed/" + symbol + "/" + order.getMemberId(), order);
+                    nettyHandler.handleOrder(NettyCommand.PUSH_EXCHANGE_ORDER_COMPLETED, order);
+                }
+            }
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -117,13 +115,12 @@ public class ExchangeTradeConsumer {
 	@KafkaListener(topics = "exchange-trade-plate", containerFactory = "kafkaListenerContainerFactory")
 	public void handleTradePlate(List<ConsumerRecord<String, String>> records) {
 		try {
-			for (int i = 0; i < records.size(); i++) {
-				ConsumerRecord<String, String> record = records.get(i);
-				//logger.info("推送盘口信息topic={},value={},size={}", record.topic(), record.value(), records.size());
-				TradePlate plate = JSON.parseObject(record.value(), TradePlate.class);
-				String symbol = plate.getSymbol();
-				pushJob.addPlates(symbol, plate);
-			}
+            for (ConsumerRecord<String, String> record : records) {
+                //logger.info("推送盘口信息topic={},value={},size={}", record.topic(), record.value(), records.size());
+                TradePlate plate = JSON.parseObject(record.value(), TradePlate.class);
+                String symbol = plate.getSymbol();
+                pushJob.addPlates(symbol, plate);
+            }
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

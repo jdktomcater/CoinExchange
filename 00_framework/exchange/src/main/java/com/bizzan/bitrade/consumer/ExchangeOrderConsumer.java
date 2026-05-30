@@ -4,8 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.bizzan.bitrade.Trader.CoinTrader;
 import com.bizzan.bitrade.Trader.CoinTraderFactory;
 import com.bizzan.bitrade.entity.ExchangeOrder;
-import com.bizzan.bitrade.service.ExchangeCoinService;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +23,7 @@ public class ExchangeOrderConsumer {
     @Autowired
     private KafkaTemplate<String,String> kafkaTemplate;
 
-    @KafkaListener(topics = "exchange-order",containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "exchange-order", containerFactory = "kafkaListenerContainerFactory")
     public void onOrderSubmitted(List<ConsumerRecord<String,String>> records){
         for (int i = 0; i < records.size(); i++) {
             ConsumerRecord<String,String> record  = records.get(i);
@@ -45,7 +43,6 @@ public class ExchangeOrderConsumer {
                     trader.trade(order);
                     log.info("complete trade,{}ms used!", System.currentTimeMillis() - startTick);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     log.info("====交易出错，退回订单===",e);
                     kafkaTemplate.send("exchange-order-cancel-success", JSON.toJSONString(order));
                 }
@@ -71,7 +68,6 @@ public class ExchangeOrderConsumer {
                     }
                 }catch (Exception e){
                     log.info("====取消订单出错===",e);
-                    e.printStackTrace();
                 }
             }
         }

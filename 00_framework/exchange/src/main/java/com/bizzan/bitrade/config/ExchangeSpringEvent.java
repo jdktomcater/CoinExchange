@@ -1,5 +1,6 @@
 package com.bizzan.bitrade.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@Slf4j
 @Component
 public class ExchangeSpringEvent implements ApplicationListener<ContextRefreshedEvent> {
-    private Logger log = LoggerFactory.getLogger(ExchangeSpringEvent.class);
     @Autowired
     CoinTraderFactory coinTraderFactory;
     @Autowired

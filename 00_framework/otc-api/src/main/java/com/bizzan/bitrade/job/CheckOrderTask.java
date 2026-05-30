@@ -24,7 +24,7 @@ public class CheckOrderTask {
     public void checkExpireOrder() {
         log.info("=========开始检查过期订单===========");
         List<Order> list = orderService.checkExpiredOrder();
-        list.stream().forEach(x -> {
+        list.forEach(x -> {
                     try {
                         orderService.cancelOrderTask(x);
                     } catch (Exception e) {

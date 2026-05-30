@@ -11,6 +11,7 @@ import com.bizzan.bitrade.service.ExchangeOrderDetailService;
 import com.bizzan.bitrade.service.ExchangeOrderService;
 import com.bizzan.bitrade.util.MessageResult;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,11 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/monitor")
 public class MonitorController {
-	private Logger log = LoggerFactory.getLogger(MonitorController.class);
+
 	@Autowired
 	private CoinTraderFactory factory;
 	@Autowired

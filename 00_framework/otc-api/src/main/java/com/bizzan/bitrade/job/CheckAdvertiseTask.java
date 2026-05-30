@@ -38,19 +38,18 @@ public class CheckAdvertiseTask {
         //支持的币种
         List<OtcCoin> list = otcCoinService.getNormalCoin();
         Map<String, BigDecimal> map = coins.getCoins();
-        list.stream().forEach(
+        list.forEach(
                 x -> {
                     BigDecimal marketPrice = map.get(x.getUnit());
                     try {
                         List<Map<String, String>> list1 = advertiseService.selectSellAutoOffShelves(x.getId(), marketPrice, x.getJyRate());
                         List<Map<String, String>> list2 = advertiseService.selectBuyAutoOffShelves(x.getId(), marketPrice);
                         list1.addAll(list2);
-                        list1.stream().forEach(
+                        list1.forEach(
                                 y -> {
                                     try {
                                         advertiseService.autoPutOffShelves(y, x);
                                     } catch (InformationExpiredException e) {
-                                        e.printStackTrace();
                                         log.warn("{}号广告:自动下架失败", y.get("id"));
                                     }
                                 }

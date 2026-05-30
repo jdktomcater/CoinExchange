@@ -101,7 +101,7 @@ public final class QuoteMessage {
 			}
 		}
 
-		public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+		public static com.google.protobuf.Descriptors.Descriptor getDescriptor() {
 			return QuoteMessage.INTERNAL_STATIC_TUTORIAL_SIMPLERESPONSE_DESCRIPTOR;
 		}
 

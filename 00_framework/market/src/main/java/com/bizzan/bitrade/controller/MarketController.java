@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 @Slf4j
@@ -53,8 +54,7 @@ public class MarketController {
      */
     @RequestMapping("symbol")
     public List<ExchangeCoin> findAllSymbol(){
-        List<ExchangeCoin> coins = coinService.findAllVisible();
-        return coins;
+        return coinService.findAllVisible();
     }
 
     @RequestMapping("overview")
@@ -72,8 +72,8 @@ public class MarketController {
         }
         result.put("recommend",recommendThumbs);
         List<CoinThumb> allThumbs = findSymbolThumb();
-        Collections.sort(allThumbs, (o1, o2) -> o2.getChg().compareTo(o1.getChg()));
-        int limit = allThumbs.size() > 5 ? 5 : allThumbs.size();
+        allThumbs.sort((o1, o2) -> o2.getChg().compareTo(o1.getChg()));
+        int limit = Math.min(allThumbs.size(), 5);
         result.put("changeRank",allThumbs.subList(0,limit));
         return result;
     }
@@ -116,7 +116,7 @@ public class MarketController {
         JSONObject obj = new JSONObject();
         obj.put("buy", latestPrice);
         // 0.015为1.5%的买卖差价
-        obj.put("sell", latestPrice.subtract(latestPrice.multiply(new BigDecimal(0.011)).setScale(2, BigDecimal.ROUND_DOWN)));
+        obj.put("sell", latestPrice.subtract(latestPrice.multiply(new BigDecimal("0.011")).setScale(2, RoundingMode.DOWN)));
         mr.setData(obj);
         return mr;
     }
@@ -203,7 +203,7 @@ public class MarketController {
             period = resolution.substring(0,resolution.length()-1) + "month";
         }
         else{
-            Integer val = Integer.parseInt(resolution);
+            int val = Integer.parseInt(resolution);
             if(val < 60) {
                 period = resolution + "min";
             }
@@ -225,7 +225,8 @@ public class MarketController {
         	}
         	// 中间段如果出现为0的现象，需要处理一下
         	if(item.getOpenPrice().compareTo(BigDecimal.ZERO) == 0) {
-        		item.setOpenPrice(temKline.getClosePrice());
+                assert temKline != null;
+                item.setOpenPrice(temKline.getClosePrice());
         		item.setClosePrice(temKline.getClosePrice());
         		item.setHighestPrice(temKline.getClosePrice());
         		item.setLowestPrice(temKline.getClosePrice());

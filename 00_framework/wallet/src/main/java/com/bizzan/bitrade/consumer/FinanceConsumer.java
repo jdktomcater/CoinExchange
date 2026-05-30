@@ -70,7 +70,7 @@ public class FinanceConsumer {
 	            logger.info("wallet recharge result:{}", mr);
         	}
         }else {
-	        if (coin != null && walletService.findDeposit(address, txid) == null) {
+	        if (walletService.findDeposit(address, txid) == null) {
 	            MessageResult mr = walletService.recharge(coin, address, amount, txid);
 	            logger.info("wallet recharge result:{}", mr);
 	        }
@@ -96,7 +96,7 @@ public class FinanceConsumer {
 
             Coin coin = coinService.findByUnit(record.key());
             logger.info("coin = {}",coin.toString());
-            if (coin != null && coin.getCanAutoWithdraw() == BooleanEnum.IS_TRUE) {
+            if (coin.getCanAutoWithdraw() == BooleanEnum.IS_TRUE) {
                 BigDecimal minerFee = coin.getMinerFee();
                 MessageResult result = restTemplate.getForObject(url,
                         MessageResult.class, json.getString("address"), json.getBigDecimal("arriveAmount"), minerFee);

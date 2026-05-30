@@ -24,33 +24,21 @@ public class ExchangePushJob {
     private Map<String,List<CoinThumb>> thumbQueue = new HashMap<>();
 
     public void addTrades(String symbol, List<ExchangeTrade> trades){
-        List<ExchangeTrade> list = tradesQueue.get(symbol);
-        if(list == null){
-            list = new ArrayList<>();
-            tradesQueue.put(symbol,list);
-        }
+        List<ExchangeTrade> list = tradesQueue.computeIfAbsent(symbol, k -> new ArrayList<>());
         synchronized (list) {
             list.addAll(trades);
         }
     }
 
     public void addPlates(String symbol, TradePlate plate){
-        List<TradePlate> list = plateQueue.get(symbol);
-        if(list == null){
-            list = new ArrayList<>();
-            plateQueue.put(symbol,list);
-        }
+        List<TradePlate> list = plateQueue.computeIfAbsent(symbol, k -> new ArrayList<>());
         synchronized (list) {
             list.add(plate);
         }
     }
 
     public void addThumb(String symbol, CoinThumb thumb){
-        List<CoinThumb> list = thumbQueue.get(symbol);
-        if(list == null){
-            list = new ArrayList<>();
-            thumbQueue.put(symbol,list);
-        }
+        List<CoinThumb> list = thumbQueue.computeIfAbsent(symbol, k -> new ArrayList<>());
         synchronized (list) {
             list.add(thumb);
         }
@@ -59,12 +47,10 @@ public class ExchangePushJob {
 
     @Scheduled(fixedRate = 500)
     public void pushTrade(){
-        Iterator<Map.Entry<String,List<ExchangeTrade>>> entryIterator = tradesQueue.entrySet().iterator();
-        while (entryIterator.hasNext()){
-            Map.Entry<String,List<ExchangeTrade>> entry =  entryIterator.next();
+        for (Map.Entry<String, List<ExchangeTrade>> entry : tradesQueue.entrySet()) {
             String symbol = entry.getKey();
             List<ExchangeTrade> trades = entry.getValue();
-            if(trades.size() > 0){
+            if (!trades.isEmpty()) {
                 synchronized (trades) {
                     messagingTemplate.convertAndSend("/topic/market/trade/" + symbol, trades);
                     trades.clear();
@@ -76,23 +62,19 @@ public class ExchangePushJob {
 
     @Scheduled(fixedDelay = 2000)
     public void pushPlate(){
-        Iterator<Map.Entry<String,List<TradePlate>>> entryIterator = plateQueue.entrySet().iterator();
-        while (entryIterator.hasNext()){
-            Map.Entry<String,List<TradePlate>> entry =  entryIterator.next();
+        for (Map.Entry<String, List<TradePlate>> entry : plateQueue.entrySet()) {
             String symbol = entry.getKey();
             List<TradePlate> plates = entry.getValue();
-            if(plates.size() > 0){
+            if (!plates.isEmpty()) {
                 boolean hasPushAskPlate = false;
                 boolean hasPushBidPlate = false;
                 synchronized (plates) {
-                    for(TradePlate plate:plates) {
-                        if(plate.getDirection() == ExchangeOrderDirection.BUY && !hasPushBidPlate) {
+                    for (TradePlate plate : plates) {
+                        if (plate.getDirection() == ExchangeOrderDirection.BUY && !hasPushBidPlate) {
                             hasPushBidPlate = true;
-                        }
-                        else if(plate.getDirection() == ExchangeOrderDirection.SELL && !hasPushAskPlate){
+                        } else if (plate.getDirection() == ExchangeOrderDirection.SELL && !hasPushAskPlate) {
                             hasPushAskPlate = true;
-                        }
-                        else {
+                        } else {
                             continue;
                         }
                         //websocket推送盘口信息
@@ -110,14 +92,12 @@ public class ExchangePushJob {
 
     @Scheduled(fixedRate = 500)
     public void pushThumb(){
-        Iterator<Map.Entry<String,List<CoinThumb>>> entryIterator = thumbQueue.entrySet().iterator();
-        while (entryIterator.hasNext()){
-            Map.Entry<String,List<CoinThumb>> entry =  entryIterator.next();
+        for (Map.Entry<String, List<CoinThumb>> entry : thumbQueue.entrySet()) {
             String symbol = entry.getKey();
             List<CoinThumb> thumbs = entry.getValue();
-            if(thumbs.size() > 0){
+            if (!thumbs.isEmpty()) {
                 synchronized (thumbs) {
-                    messagingTemplate.convertAndSend("/topic/market/thumb",thumbs.get(thumbs.size() - 1));
+                    messagingTemplate.convertAndSend("/topic/market/thumb", thumbs.get(thumbs.size() - 1));
                     thumbs.clear();
                 }
             }
