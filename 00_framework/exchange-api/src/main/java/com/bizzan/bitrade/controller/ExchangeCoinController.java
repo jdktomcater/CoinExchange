@@ -26,11 +26,10 @@ public class ExchangeCoinController extends BaseController {
     @RequestMapping("base-symbol")
     public MessageResult baseSymbol() {
         List<String> baseSymbol = service.getBaseSymbol();
-        if (baseSymbol != null && baseSymbol.size() > 0) {
+        if (baseSymbol != null && !baseSymbol.isEmpty()) {
             return success(baseSymbol);
         }
         return error("baseSymbol null");
-
     }
 
 }
